@@ -10,7 +10,6 @@ import { DownloadOptions } from '@actions/cache/lib/options';
 
 describe('dependency cache', () => {
   const ORIGINAL_RUNNER_OS = process.env['RUNNER_OS'];
-  const ORIGINAL_GITHUB_WORKSPACE = process.env['GITHUB_WORKSPACE'];
   const ORIGINAL_CWD = process.cwd();
   let workspace: string;
   let spyInfo: jest.SpyInstance<void, [message: string]>;
@@ -35,7 +34,6 @@ describe('dependency cache', () => {
       default:
         throw new Error(`unknown platform: ${os.platform()}`);
     }
-    process.env['GITHUB_WORKSPACE'] = undefined;
     process.chdir(workspace);
   });
 
@@ -50,7 +48,6 @@ describe('dependency cache', () => {
   afterEach(() => {
     process.chdir(ORIGINAL_CWD);
     process.env['RUNNER_OS'] = ORIGINAL_RUNNER_OS;
-    process.env['GITHUB_WORKSPACE'] = ORIGINAL_GITHUB_WORKSPACE;
   });
 
   describe('restore', () => {
