@@ -64508,16 +64508,14 @@ const supportedPackageManager = [
     {
         id: 'maven',
         path: [path_1.join(os_1.default.homedir(), '.m2', 'repository')],
-        key: () => __awaiter(void 0, void 0, void 0, function* () {
-            return `${process.env['RUNNER_OS']}-maven-${yield glob.hashFiles('**/pom.xml')}`;
-        })
+        // https://github.com/actions/cache/blob/0638051e9af2c23d10bb70fa9beffcad6cff9ce3/examples.md#java---maven
+        pattern: ['**/pom.xml']
     },
     {
         id: 'gradle',
         path: [path_1.join(os_1.default.homedir(), '.gradle', 'caches'), path_1.join(os_1.default.homedir(), '.gradle', 'wrapper')],
-        key: () => __awaiter(void 0, void 0, void 0, function* () {
-            return `${process.env['RUNNER_OS']}-gradle-${yield glob.hashFiles('**/*.gradle*\n**/gradle-wrapper.properties')}`;
-        })
+        // https://github.com/actions/cache/blob/0638051e9af2c23d10bb70fa9beffcad6cff9ce3/examples.md#java---gradle
+        pattern: ['**/*.gradle*', '**/gradle-wrapper.properties']
     }
 ];
 function findPackageManager(id) {
@@ -64528,24 +64526,40 @@ function findPackageManager(id) {
     return packageManager;
 }
 /**
+ * A function that generates a cache key to use.
+ * Format of the generated key will be "${{ platform }}-${{ id }}-${{ fileHash }}"".
+ * If there is no file matched to {@link PackageManager.path}, the generated key ends with a dash (-).
+ * @see {@link https://docs.github.com/en/actions/guides/caching-dependencies-to-speed-up-workflows#matching-a-cache-key|spec of cache key}
+ */
+function computeCacheKey(packageManager) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return `${process.env['RUNNER_OS']}-${packageManager.id}-${yield glob.hashFiles(packageManager.pattern.join('\n'))}`;
+    });
+}
+/**
  * Restore the dependency cache
  * @param id ID of the package manager, should be "maven" or "gradle"
  */
 function restore(id) {
     return __awaiter(this, void 0, void 0, function* () {
         const packageManager = findPackageManager(id);
-        const primaryKey = yield packageManager.key();
+        const primaryKey = yield computeCacheKey(packageManager);
         core.debug(`primary key is ${primaryKey}`);
         core.saveState(STATE_CACHE_PRIMARY_KEY, primaryKey);
+        if (primaryKey.endsWith('-')) {
+            core.warning(`No file in ${process.cwd()} matched to [${packageManager.pattern}], make sure you have checked out the target repository`);
+            return;
+        }
         const matchedKey = yield cache.restoreCache(packageManager.path, primaryKey, [
             `${process.env['RUNNER_OS']}-${id}`
         ]);
-        if (!matchedKey) {
-            core.info(`${packageManager} cache is not found`);
-            return;
+        if (matchedKey) {
+            core.saveState(CACHE_MATCHED_KEY, matchedKey);
+            core.info(`Cache restored from key: ${matchedKey}`);
         }
-        core.saveState(CACHE_MATCHED_KEY, matchedKey);
-        core.info(`Cache restored from key: ${matchedKey}`);
+        else {
+            core.info(`${packageManager.id} cache is not found`);
+        }
     });
 }
 exports.restore = restore;
@@ -64556,7 +64570,7 @@ exports.restore = restore;
 function save(id) {
     return __awaiter(this, void 0, void 0, function* () {
         const packageManager = findPackageManager(id);
-        const primaryKey = yield packageManager.key();
+        const primaryKey = yield computeCacheKey(packageManager);
         const matchedKey = core.getState(CACHE_MATCHED_KEY);
         if (matchedKey === primaryKey) {
             // no change in target directories
