@@ -10,6 +10,7 @@ import { DownloadOptions } from '@actions/cache/lib/options';
 
 describe('dependency cache', () => {
   const ORIGINAL_RUNNER_OS = process.env['RUNNER_OS'];
+  const ORIGINAL_GITHUB_WORKSPACE = process.env['GITHUB_WORKSPACE'];
   const ORIGINAL_CWD = process.cwd();
   let workspace: string;
   let spyInfo: jest.SpyInstance<void, [message: string]>;
@@ -35,6 +36,9 @@ describe('dependency cache', () => {
         throw new Error(`unknown platform: ${os.platform()}`);
     }
     process.chdir(workspace);
+    // This hack is necessary because @actions/glob ignores files not in the GITHUB_WORKSPACE
+    // https://git.io/Jcxig
+    process.env['GITHUB_WORKSPACE'] = projectRoot(workspace);
   });
 
   beforeEach(() => {
@@ -47,6 +51,7 @@ describe('dependency cache', () => {
 
   afterEach(() => {
     process.chdir(ORIGINAL_CWD);
+    process.env['GITHUB_WORKSPACE'] = ORIGINAL_GITHUB_WORKSPACE;
     process.env['RUNNER_OS'] = ORIGINAL_RUNNER_OS;
   });
 

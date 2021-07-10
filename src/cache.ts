@@ -50,7 +50,7 @@ function findPackageManager(id: string): PackageManager {
  */
 async function computeCacheKey(packageManager: PackageManager) {
   return `${process.env['RUNNER_OS']}-${packageManager.id}-${await glob.hashFiles(
-    packageManager.pattern.map(p => `./${p}`).join('\n')
+    packageManager.pattern.join('\n')
   )}`;
 }
 
