@@ -21,7 +21,19 @@ describe('dependency cache', () => {
 
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'setup-java-cache-'));
-    process.env['RUNNER_OS'] = 'Linux';
+    switch (os.platform()) {
+      case 'darwin':
+        process.env['RUNNER_OS'] = 'macOS';
+        break;
+      case 'win32':
+        process.env['RUNNER_OS'] = 'Windows';
+        break;
+      case 'linux':
+        process.env['RUNNER_OS'] = 'Linux';
+        break;
+      default:
+        throw new Error(`unknown platform: ${os.platform()}`);
+    }
     process.chdir(workspace);
   });
 
@@ -53,7 +65,7 @@ describe('dependency cache', () => {
         );
       });
       it('downloads cache', async () => {
-        fs.writeFileSync(join(workspace, 'pom.xml'), '<project />');
+        createFile(join(workspace, 'pom.xml'));
 
         await expect(restore('maven')).resolves.not.toThrow();
         expect(spyCacheRestore).toBeCalled();
@@ -71,7 +83,7 @@ describe('dependency cache', () => {
         );
       });
       it('downloads cache based on build.gradle', async () => {
-        fs.writeFileSync(join(workspace, 'build.gradle'), '// TBU');
+        createFile(join(workspace, 'build.gradle'));
 
         await expect(restore('gradle')).resolves.not.toThrow();
         expect(spyCacheRestore).toBeCalled();
@@ -79,7 +91,7 @@ describe('dependency cache', () => {
         expect(spyInfo).toBeCalledWith('gradle cache is not found');
       });
       it('downloads cache based on build.gradle.kts', async () => {
-        fs.writeFileSync(join(workspace, 'build.gradle.kts'), '// TBU');
+        createFile(join(workspace, 'build.gradle.kts'));
 
         await expect(restore('gradle')).resolves.not.toThrow();
         expect(spyCacheRestore).toBeCalled();
@@ -94,6 +106,11 @@ describe('dependency cache', () => {
     });
   });
 });
+
+function createFile(path: string) {
+  core.info(`created a file at ${path}`);
+  fs.writeFileSync(path, '');
+}
 
 function projectRoot(workspace: string): string {
   if (os.platform() === 'darwin') {
