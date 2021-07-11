@@ -36,7 +36,7 @@ jobs:
             exit 1
           fi
   restore:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     needs: save
     steps:
       - name: Checkout
