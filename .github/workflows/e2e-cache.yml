@@ -26,6 +26,7 @@ jobs:
       - name: Create files to cache
         run: |
           cat <<EOF > build.gradle
+            plugins { id 'java' }
             repositories { mavenCentral() }
             dependencies { implementation 'org.codehaus.groovy:groovy:1.8.6' }
           EOF
@@ -43,6 +44,7 @@ jobs:
       - name: Create build.gradle
         run: |
           cat <<EOF > build.gradle
+            plugins { id 'java' }
             repositories { mavenCentral() }
             dependencies { implementation 'org.codehaus.groovy:groovy:1.8.6' }
           EOF
