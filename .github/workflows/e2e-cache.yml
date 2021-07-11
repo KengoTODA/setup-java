@@ -36,6 +36,7 @@ jobs:
           fi
   restore:
     runs-on: ubuntu
+    needs: save
     steps:
       - name: Checkout
         uses: actions/checkout@v2
