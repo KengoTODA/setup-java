@@ -2,6 +2,7 @@ import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { restore, save } from '../src/cache';
+import { run as cleanup } from '../src/cleanup-java';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as core from '@actions/core';
@@ -14,10 +15,6 @@ describe('dependency cache', () => {
   let workspace: string;
   let spyInfo: jest.SpyInstance<void, Parameters<typeof core.info>>;
   let spyWarning: jest.SpyInstance<void, Parameters<typeof core.warning>>;
-  let spyCacheRestore: jest.SpyInstance<
-    ReturnType<typeof cache.restoreCache>,
-    Parameters<typeof cache.restoreCache>
-  >;
 
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'setup-java-cache-'));
@@ -43,9 +40,6 @@ describe('dependency cache', () => {
   beforeEach(() => {
     spyInfo = jest.spyOn(core, 'info');
     spyWarning = jest.spyOn(core, 'warning');
-    spyCacheRestore = jest
-      .spyOn(cache, 'restoreCache')
-      .mockImplementation((paths: string[], primaryKey: string) => Promise.resolve(undefined));
   });
 
   afterEach(() => {
@@ -55,13 +49,24 @@ describe('dependency cache', () => {
   });
 
   describe('restore', () => {
+    let spyCacheRestore: jest.SpyInstance<
+      ReturnType<typeof cache.restoreCache>,
+      Parameters<typeof cache.restoreCache>
+    >;
+
+    beforeEach(() => {
+      spyCacheRestore = jest
+        .spyOn(cache, 'restoreCache')
+        .mockImplementation((paths: string[], primaryKey: string) => Promise.resolve(undefined));
+    });
+
     it('throws error if unsupported package manager specified', () => {
-      expect(restore('ant')).rejects.toThrowError('unknown package manager specified: ant');
+      return expect(restore('ant')).rejects.toThrowError('unknown package manager specified: ant');
     });
 
     describe('for maven', () => {
       it('warns if no pom.xml found', async () => {
-        await expect(restore('maven')).resolves.not.toThrow();
+        await restore('maven');
         expect(spyWarning).toBeCalledWith(
           `No file in ${projectRoot(
             workspace
@@ -71,7 +76,7 @@ describe('dependency cache', () => {
       it('downloads cache', async () => {
         createFile(join(workspace, 'pom.xml'));
 
-        await expect(restore('maven')).resolves.not.toThrow();
+        await restore('maven');
         expect(spyCacheRestore).toBeCalled();
         expect(spyWarning).not.toBeCalled();
         expect(spyInfo).toBeCalledWith('maven cache is not found');
@@ -79,7 +84,7 @@ describe('dependency cache', () => {
     });
     describe('for gradle', () => {
       it('warns if no build.gradle found', async () => {
-        await expect(restore('gradle')).resolves.not.toThrow();
+        await restore('gradle');
         expect(spyWarning).toBeCalledWith(
           `No file in ${projectRoot(
             workspace
@@ -89,7 +94,7 @@ describe('dependency cache', () => {
       it('downloads cache based on build.gradle', async () => {
         createFile(join(workspace, 'build.gradle'));
 
-        await expect(restore('gradle')).resolves.not.toThrow();
+        await restore('gradle');
         expect(spyCacheRestore).toBeCalled();
         expect(spyWarning).not.toBeCalled();
         expect(spyInfo).toBeCalledWith('gradle cache is not found');
@@ -97,7 +102,7 @@ describe('dependency cache', () => {
       it('downloads cache based on build.gradle.kts', async () => {
         createFile(join(workspace, 'build.gradle.kts'));
 
-        await expect(restore('gradle')).resolves.not.toThrow();
+        await restore('gradle');
         expect(spyCacheRestore).toBeCalled();
         expect(spyWarning).not.toBeCalled();
         expect(spyInfo).toBeCalledWith('gradle cache is not found');
@@ -105,8 +110,97 @@ describe('dependency cache', () => {
     });
   });
   describe('save', () => {
+    let spyCacheSave: jest.SpyInstance<
+      ReturnType<typeof cache.saveCache>,
+      Parameters<typeof cache.saveCache>
+    >;
+
+    beforeEach(() => {
+      spyCacheSave = jest
+        .spyOn(cache, 'saveCache')
+        .mockImplementation((paths: string[], key: string) => Promise.resolve(0));
+    });
+
     it('throws error if unsupported package manager specified', () => {
-      expect(save('ant')).rejects.toThrowError('unknown package manager specified: ant');
+      return expect(save('ant')).rejects.toThrowError('unknown package manager specified: ant');
+    });
+
+    describe('for maven', () => {
+      it('uploads cache even if no pom.xml found', async () => {
+        await save('maven');
+        expect(spyCacheSave).toBeCalled();
+        expect(spyWarning).not.toBeCalled();
+        expect(spyInfo).toBeCalledWith(expect.stringMatching(/^Cache saved with the key:.*/));
+      });
+      it('uploads cache', async () => {
+        createFile(join(workspace, 'pom.xml'));
+
+        await save('maven');
+        expect(spyCacheSave).toBeCalled();
+        expect(spyWarning).not.toBeCalled();
+        expect(spyInfo).toBeCalledWith(expect.stringMatching(/^Cache saved with the key:.*/));
+      });
+    });
+    describe('for gradle', () => {
+      it('uploads cache even if no build.gradle found', async () => {
+        await save('gradle');
+        expect(spyCacheSave).toBeCalled();
+        expect(spyWarning).not.toBeCalled();
+        expect(spyInfo).toBeCalledWith(expect.stringMatching(/^Cache saved with the key:.*/));
+      });
+      it('uploads cache based on build.gradle', async () => {
+        createFile(join(workspace, 'build.gradle'));
+
+        await save('gradle');
+        expect(spyCacheSave).toBeCalled();
+        expect(spyWarning).not.toBeCalled();
+        expect(spyInfo).toBeCalledWith(expect.stringMatching(/^Cache saved with the key:.*/));
+      });
+      it('uploads cache based on build.gradle.kts', async () => {
+        createFile(join(workspace, 'build.gradle.kts'));
+
+        await save('gradle');
+        expect(spyCacheSave).toBeCalled();
+        expect(spyWarning).not.toBeCalled();
+        expect(spyInfo).toBeCalledWith(expect.stringMatching(/^Cache saved with the key:.*/));
+      });
+    });
+  });
+
+  describe('cleanup', () => {
+    let spyCacheSave: jest.SpyInstance<
+      ReturnType<typeof cache.saveCache>,
+      Parameters<typeof cache.saveCache>
+    >;
+
+    beforeEach(() => {
+      spyCacheSave = jest.spyOn(cache, 'saveCache');
+    });
+
+    it('does not fail if the save provess throws a ReserveCacheError', async () => {
+      spyCacheSave.mockImplementation((paths: string[], key: string) =>
+        Promise.reject(
+          new cache.ReserveCacheError(
+            'Unable to reserve cache with key, another job may be creating this cache.'
+          )
+        )
+      );
+      jest.spyOn(core, 'getInput').mockImplementation((name: string) => {
+        return name === 'cache' ? 'gradle' : '';
+      });
+      await cleanup();
+      expect(spyCacheSave).toBeCalled();
+    });
+
+    it('does not fail even though the save process throws error', async () => {
+      spyCacheSave.mockImplementation((paths: string[], key: string) =>
+        Promise.reject(new Error('Unexpected error'))
+      );
+      jest.spyOn(core, 'getInput').mockImplementation((name: string) => {
+        return name === 'cache' ? 'gradle' : '';
+      });
+      await cleanup();
+      expect(spyCacheSave).toBeCalled();
     });
   });
 });

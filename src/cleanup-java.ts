@@ -41,8 +41,13 @@ async function ignoreError(promise: Promise<void>) {
   });
 }
 
-async function run() {
+export async function run() {
   await Promise.all([removePrivateKeyFromKeychain(), ignoreError(saveCache())]);
 }
 
-run();
+if (require.main === module) {
+  run();
+} else {
+  // https://nodejs.org/api/modules.html#modules_accessing_the_main_module
+  core.info('the script is loaded as a module, so skipping the execution');
+}

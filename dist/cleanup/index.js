@@ -6181,6 +6181,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.run = void 0;
 const core = __importStar(__webpack_require__(470));
 const gpg = __importStar(__webpack_require__(884));
 const constants = __importStar(__webpack_require__(694));
@@ -6232,7 +6233,14 @@ function run() {
         yield Promise.all([removePrivateKeyFromKeychain(), ignoreError(saveCache())]);
     });
 }
-run();
+exports.run = run;
+if (require.main === require.cache[eval('__filename')]) {
+    run();
+}
+else {
+    // https://nodejs.org/api/modules.html#modules_accessing_the_main_module
+    core.info('the script is loaded as a module, so skipping the execution');
+}
 
 
 /***/ }),
