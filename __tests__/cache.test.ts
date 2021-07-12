@@ -6,18 +6,17 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
-import { DownloadOptions } from '@actions/cache/lib/options';
 
 describe('dependency cache', () => {
   const ORIGINAL_RUNNER_OS = process.env['RUNNER_OS'];
   const ORIGINAL_GITHUB_WORKSPACE = process.env['GITHUB_WORKSPACE'];
   const ORIGINAL_CWD = process.cwd();
   let workspace: string;
-  let spyInfo: jest.SpyInstance<void, [message: string]>;
-  let spyWarning: jest.SpyInstance<void, [message: string | Error]>;
+  let spyInfo: jest.SpyInstance<void, Parameters<typeof core.info>>;
+  let spyWarning: jest.SpyInstance<void, Parameters<typeof core.warning>>;
   let spyCacheRestore: jest.SpyInstance<
     Promise<string | undefined>,
-    [paths: string[], primaryKey: string, restoreKeys?: string[], options?: DownloadOptions]
+    Parameters<typeof cache.restoreCache>
   >;
 
   beforeEach(() => {
