@@ -19015,7 +19015,7 @@ function save(id) {
                 core.info(error.message);
             }
             else {
-                core.warning(`${error.message}`);
+                core.warning(error.message);
             }
         }
     });

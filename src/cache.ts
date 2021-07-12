@@ -106,7 +106,7 @@ export async function save(id: string) {
     } else if (error.name === cache.ReserveCacheError.name) {
       core.info(error.message);
     } else {
-      core.warning(`${error.message}`);
+      core.warning(error.message);
     }
   }
 }

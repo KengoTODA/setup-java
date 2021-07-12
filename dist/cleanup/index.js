@@ -6199,15 +6199,37 @@ function removePrivateKeyFromKeychain() {
         }
     });
 }
+/**
+ * Check given input and run a save process for the specified package manager
+ * @returns Promise that will be resolved when the save process finishes
+ */
 function saveCache() {
     return __awaiter(this, void 0, void 0, function* () {
         const cache = core.getInput(constants.INPUT_CACHE);
         return cache ? cache_1.save(cache) : Promise.resolve();
     });
 }
+/**
+ * The save process is best-effort, and it should not make the workflow failed
+ * even though this process throws an error.
+ * @param promise the promise to ignore error from
+ * @returns Promise that will ignore error reported by the given promise
+ */
+function ignoreError(promise) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => {
+            promise
+                .catch(error => {
+                core.warning(error);
+                resolve(void 0);
+            })
+                .then(resolve);
+        });
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield Promise.all([removePrivateKeyFromKeychain(), saveCache()]);
+        yield Promise.all([removePrivateKeyFromKeychain(), ignoreError(saveCache())]);
     });
 }
 run();
@@ -64589,7 +64611,7 @@ function save(id) {
                 core.info(error.message);
             }
             else {
-                core.warning(`${error.message}`);
+                core.warning(error.message);
             }
         }
     });
