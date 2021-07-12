@@ -10,6 +10,10 @@ on:
     paths-ignore:
       - '**.md'
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   save:
     runs-on: ${{ matrix.os }}
@@ -76,7 +80,6 @@ jobs:
           java-version: '11'
           cache: gradle
       - name: Confirm that ~/.gradle/caches directory has been made
-        shell: bash
         run: |
           if [ ! -d ~/.gradle/caches ]; then
             echo "::error::The ~/.gradle/caches directory does not exist unexpectedly"
