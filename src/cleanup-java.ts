@@ -15,13 +15,34 @@ async function removePrivateKeyFromKeychain() {
   }
 }
 
+/**
+ * Check given input and run a save process for the specified package manager
+ * @returns Promise that will be resolved when the save process finishes
+ */
 async function saveCache() {
   const cache = core.getInput(constants.INPUT_CACHE);
   return cache ? save(cache) : Promise.resolve();
 }
 
+/**
+ * The save process is best-effort, and it should not make the workflow failed
+ * even though this process throws an error.
+ * @param promise the promise to ignore error from
+ * @returns Promise that will ignore error reported by the given promise
+ */
+async function ignoreError(promise: Promise<void>) {
+  return new Promise(resolve => {
+    promise
+      .catch(error => {
+        core.warning(error);
+        resolve(void 0);
+      })
+      .then(resolve);
+  });
+}
+
 async function run() {
-  await Promise.all([removePrivateKeyFromKeychain(), saveCache()]);
+  await Promise.all([removePrivateKeyFromKeychain(), ignoreError(saveCache())]);
 }
 
 run();
