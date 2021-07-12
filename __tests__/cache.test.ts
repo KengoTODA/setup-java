@@ -177,7 +177,7 @@ describe('dependency cache', () => {
       spyCacheSave = jest.spyOn(cache, 'saveCache');
     });
 
-    it('does not fail if the save provess throws a ReserveCacheError', async () => {
+    it('does not fail nor warn even when the save provess throws a ReserveCacheError', async () => {
       spyCacheSave.mockImplementation((paths: string[], key: string) =>
         Promise.reject(
           new cache.ReserveCacheError(
@@ -190,6 +190,7 @@ describe('dependency cache', () => {
       });
       await cleanup();
       expect(spyCacheSave).toBeCalled();
+      expect(spyWarning).not.toBeCalled();
     });
 
     it('does not fail even though the save process throws error', async () => {
