@@ -12,7 +12,11 @@ on:
 
 jobs:
   save:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -29,8 +33,14 @@ jobs:
             plugins { id 'java' }
             repositories { mavenCentral() }
             dependencies { implementation 'org.codehaus.groovy:groovy:1.8.6' }
+            tasks.register('downloadDependencies') { doLast {
+              def total = configurations.compileClasspath.inject (0) { sum, file ->
+                sum + file.length()
+              }
+              println total
+            }}
           EOF
-          gradle dependencies
+          gradle downloadDependencies
           if [ ! -d ~/.gradle/caches ]; then
             echo "::error::The ~/.gradle/caches directory does not exist unexpectedly"
             exit 1
@@ -47,6 +57,12 @@ jobs:
             plugins { id 'java' }
             repositories { mavenCentral() }
             dependencies { implementation 'org.codehaus.groovy:groovy:1.8.6' }
+            tasks.register('downloadDependencies') { doLast {
+              def total = configurations.compileClasspath.inject (0) { sum, file ->
+                sum + file.length()
+              }
+              println total
+            }}
           EOF
           if [ -d ~/.gradle/caches ]; then
             echo "::error::The ~/.gradle/caches directory exists unexpectedly"

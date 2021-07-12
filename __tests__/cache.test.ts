@@ -15,7 +15,7 @@ describe('dependency cache', () => {
   let spyInfo: jest.SpyInstance<void, Parameters<typeof core.info>>;
   let spyWarning: jest.SpyInstance<void, Parameters<typeof core.warning>>;
   let spyCacheRestore: jest.SpyInstance<
-    Promise<string | undefined>,
+    ReturnType<typeof cache.restoreCache>,
     Parameters<typeof cache.restoreCache>
   >;
 
