@@ -35,7 +35,7 @@ jobs:
         # Need to avoid using Gradle daemon to stabilize the save process on Windows
         # https://github.com/actions/cache/issues/454#issuecomment-840493935
         run: |
-          gradle downloadDependencies --no-daemon -p __tests__/cache/gradle
+          gradle downloadDependencies -p __tests__/cache/gradle
           if [ ! -d ~/.gradle/caches ]; then
             echo "::error::The ~/.gradle/caches directory does not exist unexpectedly"
             exit 1
