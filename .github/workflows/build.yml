@@ -30,7 +30,7 @@ jobs:
       - run: npm test
       - uses: actions/upload-artifact@v2
         with:
-          name: my-artifact
+          name: my-artifact (${{ matrix.os }})
           path: dist
       - name: Verify no unstaged changes
         if: runner.os != 'windows'
