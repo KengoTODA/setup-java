@@ -28,6 +28,10 @@ jobs:
       - run: npm run build
       - run: npm run format-check
       - run: npm test
+      - uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: dist
       - name: Verify no unstaged changes
         if: runner.os != 'windows'
         run: bash __tests__/verify-no-unstaged-changes.sh
