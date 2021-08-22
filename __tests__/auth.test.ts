@@ -1,3 +1,6 @@
+import { afterAll, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import io = require('@actions/io');
 import fs = require('fs');
 import path = require('path');
@@ -9,7 +12,7 @@ const m2Dir = path.join(__dirname, auth.M2_DIR);
 const settingsFile = path.join(m2Dir, auth.SETTINGS_FILE);
 
 describe('auth tests', () => {
-  let spyOSHomedir: jest.SpyInstance;
+  let spyOSHomedir: SpyInstance<string, []>;
 
   beforeEach(async () => {
     await io.rmRF(m2Dir);

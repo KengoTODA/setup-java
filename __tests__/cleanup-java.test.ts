@@ -1,15 +1,18 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import { run as cleanup } from '../src/cleanup-java';
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
 import * as util from '../src/util';
 
 describe('cleanup', () => {
-  let spyWarning: jest.SpyInstance<void, Parameters<typeof core.warning>>;
-  let spyCacheSave: jest.SpyInstance<
+  let spyWarning: SpyInstance<void, Parameters<typeof core.warning>>;
+  let spyCacheSave: SpyInstance<
     ReturnType<typeof cache.saveCache>,
     Parameters<typeof cache.saveCache>
   >;
-  let spyJobStatusSuccess: jest.SpyInstance;
+  let spyJobStatusSuccess: SpyInstance<boolean, []>;
 
   beforeEach(() => {
     spyWarning = jest.spyOn(core, 'warning');

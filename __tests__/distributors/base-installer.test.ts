@@ -1,3 +1,6 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import * as tc from '@actions/tool-cache';
 import * as core from '@actions/core';
 import * as util from '../../src/util';
@@ -42,8 +45,14 @@ describe('findInToolcache', () => {
   const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x64');
 
   let mockJavaBase: EmptyJavaBase;
-  let spyGetToolcachePath: jest.SpyInstance;
-  let spyTcFindAllVersions: jest.SpyInstance;
+  let spyGetToolcachePath: SpyInstance<
+    ReturnType<typeof util.getToolcachePath>,
+    Parameters<typeof util.getToolcachePath>
+  >;
+  let spyTcFindAllVersions: SpyInstance<
+    ReturnType<typeof tc.findAllVersions>,
+    Parameters<typeof tc.findAllVersions>
+  >;
 
   beforeEach(() => {
     spyGetToolcachePath = jest.spyOn(util, 'getToolcachePath');
@@ -152,13 +161,16 @@ describe('setupJava', () => {
 
   let mockJavaBase: EmptyJavaBase;
 
-  let spyGetToolcachePath: jest.SpyInstance;
-  let spyTcFindAllVersions: jest.SpyInstance;
-  let spyCoreDebug: jest.SpyInstance;
-  let spyCoreInfo: jest.SpyInstance;
-  let spyCoreExportVariable: jest.SpyInstance;
-  let spyCoreAddPath: jest.SpyInstance;
-  let spyCoreSetOutput: jest.SpyInstance;
+  let spyGetToolcachePath: SpyInstance<
+    ReturnType<typeof util.getToolcachePath>,
+    Parameters<typeof util.getToolcachePath>
+  >;
+  let spyTcFindAllVersions: SpyInstance<string[], Parameters<typeof tc.findAllVersions>>;
+  let spyCoreDebug: SpyInstance<void, [string]>;
+  let spyCoreInfo: SpyInstance<void, [string]>;
+  let spyCoreExportVariable: SpyInstance<void, [string, any]>;
+  let spyCoreAddPath: SpyInstance<void, [string]>;
+  let spyCoreSetOutput: SpyInstance<void, [string, any]>;
 
   beforeEach(() => {
     spyGetToolcachePath = jest.spyOn(util, 'getToolcachePath');

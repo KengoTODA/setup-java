@@ -1,3 +1,5 @@
+import { afterAll, beforeEach, expect, describe, it, jest } from '@jest/globals';
+
 import path = require('path');
 import io = require('@actions/io');
 import exec = require('@actions/exec');

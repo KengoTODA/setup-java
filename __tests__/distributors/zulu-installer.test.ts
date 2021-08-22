@@ -1,5 +1,8 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import { HttpClient } from '@actions/http-client';
-import * as semver from 'semver';
+import { IHeaders, ITypedResponse } from '@actions/http-client/interfaces';
 import { ZuluDistribution } from '../../src/distributions/zulu/installer';
 import { IZuluVersions } from '../../src/distributions/zulu/models';
 import * as utils from '../../src/util';
@@ -7,16 +10,18 @@ import * as utils from '../../src/util';
 const manifestData = require('../data/zulu-releases-default.json') as [];
 
 describe('getAvailableVersions', () => {
-  let spyHttpClient: jest.SpyInstance;
-  let spyUtilGetDownloadArchiveExtension: jest.SpyInstance;
+  let spyHttpClient: SpyInstance<Promise<ITypedResponse<unknown>>, [string, IHeaders?]>;
+  let spyUtilGetDownloadArchiveExtension: SpyInstance<string, []>;
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockReturnValue({
-      statusCode: 200,
-      headers: {},
-      result: manifestData as IZuluVersions[]
-    });
+    spyHttpClient.mockReturnValue(
+      Promise.resolve({
+        statusCode: 200,
+        headers: {},
+        result: manifestData as IZuluVersions[]
+      })
+    );
 
     spyUtilGetDownloadArchiveExtension = jest.spyOn(utils, 'getDownloadArchiveExtension');
     spyUtilGetDownloadArchiveExtension.mockReturnValue('tar.gz');

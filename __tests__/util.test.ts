@@ -1,3 +1,4 @@
+import { expect, describe, it } from '@jest/globals';
 import { isVersionSatisfies } from '../src/util';
 
 describe('isVersionSatisfies', () => {

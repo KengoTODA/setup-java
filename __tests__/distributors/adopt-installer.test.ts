@@ -1,4 +1,8 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import { HttpClient } from '@actions/http-client';
+import { IHeaders, ITypedResponse } from '@actions/http-client/interfaces';
 
 import { AdoptDistribution, AdoptImplementation } from '../../src/distributions/adopt/installer';
 import { JavaInstallerOptions } from '../../src/distributions/base-models';
@@ -6,15 +10,17 @@ import { JavaInstallerOptions } from '../../src/distributions/base-models';
 let manifestData = require('../data/adopt.json') as [];
 
 describe('getAvailableVersions', () => {
-  let spyHttpClient: jest.SpyInstance;
+  let spyHttpClient: SpyInstance<Promise<ITypedResponse<unknown>>, [string, IHeaders?]>;
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockReturnValue({
-      statusCode: 200,
-      headers: {},
-      result: []
-    });
+    spyHttpClient.mockReturnValue(
+      Promise.resolve({
+        statusCode: 200,
+        headers: {},
+        result: []
+      })
+    );
   });
 
   afterEach(() => {
@@ -86,21 +92,27 @@ describe('getAvailableVersions', () => {
   it('load available versions', async () => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
     spyHttpClient
-      .mockReturnValueOnce({
-        statusCode: 200,
-        headers: {},
-        result: manifestData
-      })
-      .mockReturnValueOnce({
-        statusCode: 200,
-        headers: {},
-        result: manifestData
-      })
-      .mockReturnValueOnce({
-        statusCode: 200,
-        headers: {},
-        result: []
-      });
+      .mockReturnValueOnce(
+        Promise.resolve({
+          statusCode: 200,
+          headers: {},
+          result: manifestData
+        })
+      )
+      .mockReturnValueOnce(
+        Promise.resolve({
+          statusCode: 200,
+          headers: {},
+          result: manifestData
+        })
+      )
+      .mockReturnValueOnce(
+        Promise.resolve({
+          statusCode: 200,
+          headers: {},
+          result: []
+        })
+      );
 
     const distribution = new AdoptDistribution(
       { version: '11', architecture: 'x64', packageType: 'jdk', checkLatest: false },

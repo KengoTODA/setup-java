@@ -1,11 +1,12 @@
+// https://kulshekhar.github.io/ts-jest/docs/getting-started/presets#advanced
+const { defaults: tsjPreset } = require('ts-jest/presets')
+
 module.exports = {
   clearMocks: true,
   moduleFileExtensions: ['js', 'ts'],
-  testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
-  testRunner: 'jest-circus/runner',
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    ...tsjPreset.transform,
   },
   verbose: true
 }

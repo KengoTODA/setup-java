@@ -1,3 +1,6 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -12,8 +15,8 @@ describe('dependency cache', () => {
   const ORIGINAL_GITHUB_WORKSPACE = process.env['GITHUB_WORKSPACE'];
   const ORIGINAL_CWD = process.cwd();
   let workspace: string;
-  let spyInfo: jest.SpyInstance<void, Parameters<typeof core.info>>;
-  let spyWarning: jest.SpyInstance<void, Parameters<typeof core.warning>>;
+  let spyInfo: SpyInstance<void, Parameters<typeof core.info>>;
+  let spyWarning: SpyInstance<void, Parameters<typeof core.warning>>;
 
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'setup-java-cache-'));
@@ -49,7 +52,7 @@ describe('dependency cache', () => {
   });
 
   describe('restore', () => {
-    let spyCacheRestore: jest.SpyInstance<
+    let spyCacheRestore: SpyInstance<
       ReturnType<typeof cache.restoreCache>,
       Parameters<typeof cache.restoreCache>
     >;
@@ -108,7 +111,7 @@ describe('dependency cache', () => {
     });
   });
   describe('save', () => {
-    let spyCacheSave: jest.SpyInstance<
+    let spyCacheSave: SpyInstance<
       ReturnType<typeof cache.saveCache>,
       Parameters<typeof cache.saveCache>
     >;

@@ -1,3 +1,6 @@
+import { afterEach, beforeEach, expect, describe, it, jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
+
 import fs from 'fs';
 
 import * as tc from '@actions/tool-cache';
@@ -15,18 +18,27 @@ describe('setupJava', () => {
 
   let mockJavaBase: LocalDistribution;
 
-  let spyGetToolcachePath: jest.SpyInstance;
-  let spyTcCacheDir: jest.SpyInstance;
-  let spyTcFindAllVersions: jest.SpyInstance;
-  let spyCoreDebug: jest.SpyInstance;
-  let spyCoreInfo: jest.SpyInstance;
-  let spyCoreExportVariable: jest.SpyInstance;
-  let spyCoreAddPath: jest.SpyInstance;
-  let spyCoreSetOutput: jest.SpyInstance;
-  let spyFsStat: jest.SpyInstance;
-  let spyFsReadDir: jest.SpyInstance;
-  let spyUtilsExtractJdkFile: jest.SpyInstance;
-  let spyPathResolve: jest.SpyInstance;
+  let spyGetToolcachePath: SpyInstance<
+    ReturnType<typeof util.getToolcachePath>,
+    Parameters<typeof util.getToolcachePath>
+  >;
+  let spyTcCacheDir: SpyInstance<Promise<string>, Parameters<typeof tc.cacheDir>>;
+  let spyTcFindAllVersions: SpyInstance<
+    ReturnType<typeof tc.findAllVersions>,
+    Parameters<typeof tc.findAllVersions>
+  >;
+  let spyCoreDebug: SpyInstance<void, [string]>;
+  let spyCoreInfo: SpyInstance<void, [string]>;
+  let spyCoreExportVariable: SpyInstance<void, [string, any]>;
+  let spyCoreAddPath: SpyInstance<void, [string]>;
+  let spyCoreSetOutput: SpyInstance<void, [string, any]>;
+  let spyFsStat: SpyInstance<Partial<fs.Stats | fs.BigIntStats>, [fs.PathLike, fs.StatOptions?]>;
+  let spyFsReadDir: SpyInstance<unknown, Parameters<typeof fs.readdirSync>>;
+  let spyUtilsExtractJdkFile: SpyInstance<
+    ReturnType<typeof util.extractJdkFile>,
+    Parameters<typeof util.extractJdkFile>
+  >;
+  let spyPathResolve: SpyInstance<string, Parameters<typeof path.resolve>>;
   let expectedJdkFile = 'JavaLocalJdkFile';
 
   beforeEach(() => {
@@ -45,8 +57,12 @@ describe('setupJava', () => {
 
     spyTcCacheDir = jest.spyOn(tc, 'cacheDir');
     spyTcCacheDir.mockImplementation(
-      (archivePath: string, toolcacheFolderName: string, version: string, architecture: string) =>
-        path.join(toolcacheFolderName, version, architecture)
+      (
+        archivePath: string,
+        toolcacheFolderName: string,
+        version: string,
+        architecture: string | undefined
+      ) => Promise.resolve(path.join(toolcacheFolderName, version, architecture || 'undefined'))
     );
 
     spyTcFindAllVersions = jest.spyOn(tc, 'findAllVersions');
@@ -73,13 +89,13 @@ describe('setupJava', () => {
     spyFsReadDir.mockImplementation(() => ['JavaTest']);
 
     spyFsStat = jest.spyOn(fs, 'statSync');
-    spyFsStat.mockImplementation((file: string) => {
+    spyFsStat.mockImplementation((file: fs.PathLike) => {
       return { isFile: () => file === expectedJdkFile };
     });
 
     // Spy on util methods
     spyUtilsExtractJdkFile = jest.spyOn(util, 'extractJdkFile');
-    spyUtilsExtractJdkFile.mockImplementation(() => 'some/random/path/');
+    spyUtilsExtractJdkFile.mockImplementation(() => Promise.resolve('some/random/path/'));
 
     // Spy on path methods
     spyPathResolve = jest.spyOn(path, 'resolve');
